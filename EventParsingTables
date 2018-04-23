@@ -1,0 +1,70 @@
+--DROP TABLE IF EXISTS tblPageLoadIDPageTypes;
+--CREATE TABLE tblPageLoadIDPageTypes(
+--    page_load_id STRING,
+--    page_type STRING,
+--    City STRING,
+--    Country STRING
+--)
+--PARTITIONED BY (pp_date STRING)
+--;
+
+--creating table for all viewed page events
+INSERT OVERWRITE TABLE tblPageLoadIDPageTypes PARTITION (pp_date)
+SELECT
+    a.page_load_id,
+    a.page_type,
+    a.mp_builtin_city City, -- for restriction of tracking i.e. bots/pp/Geoff
+    a.mp_builtin_country Country,
+    a.pp_date
+FROM tblevents_v2 a
+WHERE a.pp_date >= DATE_SUB(CURRENT_DATE,5)
+    AND a.event = 'viewed page'
+;
+
+--DROP TABLE IF EXISTS tblDestinationPageViews;
+--CREATE TABLE tblDestinationPageViews(
+--    page_load_id STRING,
+--    session_ID STRING,
+--    destination STRING,
+--    current_URL STRING
+--)
+--PARTITIONED BY (pp_date STRING)
+--;
+
+--capture every time someone viewed a destination page- WITH destination capture
+INSERT OVERWRITE TABLE tblDestinationPageViews PARTITION (pp_date)
+SELECT
+    a.page_load_ID,
+    a.session_ID,
+    REGEXP_REPLACE(UPPER(SPLIT(a.destination, '[\,]')[0])," ","_") destination,
+    a.mp_builtin_current_url current_URL,
+    a.pp_date
+FROM tblevents_v2 a
+WHERE a.pp_date >= DATE_SUB(CURRENT_DATE,5)
+    AND a.event = 'experience viewed destination'
+;
+
+--DROP TABLE IF EXISTS tblShelf_SeeAllClicks;
+--CREATE TABLE tblShelf_SeeAllClicks(
+--    shelf_name STRING,
+--    shelf_position INT,
+--    page_load_id STRING,
+--    session_ID STRING,
+--    current_URL STRING
+--)
+--PARTITIONED BY (pp_date STRING)
+--;
+
+-- capture all see all clicks on shelves here:
+INSERT OVERWRITE TABLE tblShelf_SeeAllClicks PARTITION (pp_date)
+SELECT
+    a.shelf_name,
+    a.shelf_position,
+    a.page_load_ID,
+    a.session_ID,
+    a.mp_builtin_current_url current_URL,
+    a.pp_date
+FROM tblevents_v2 a
+WHERE a.pp_date >= DATE_SUB(CURRENT_DATE,5)
+    AND a.event = 'experience clicked see all in shelf'
+;
