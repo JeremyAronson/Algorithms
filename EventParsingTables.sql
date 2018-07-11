@@ -1,4 +1,4 @@
-msck repair table tblevents;
+msck repair table tblevents; -- this adds new/missing partitions to core clickstream data table
 
 --DROP TABLE IF EXISTS tblevent_clickedExperience;
 --CREATE TABLE tblevent_clickedExperience(
@@ -111,7 +111,6 @@ WHERE a.pp_date >= DATE_SUB(CURRENT_DATE, 5)
 --)
 --PARTITIONED BY (pp_date STRING)
 --;
-
 
 INSERT OVERWRITE TABLE tblevent_viewedsearchResults PARTITION(pp_date)
 SELECT
